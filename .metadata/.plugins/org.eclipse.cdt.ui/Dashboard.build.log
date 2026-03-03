@@ -1,0 +1,55 @@
+00:21:51 **** Build of configuration Debug for project Dashboard ****
+make -j8 all 
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/croutine.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/croutine.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/croutine.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/croutine.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/event_groups.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/event_groups.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/event_groups.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/list.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/list.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/list.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/list.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/queue.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/queue.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/queue.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/queue.o"
+arm-none-eabi-gcc "../Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DSTM32 -DSTM32F4 -DSTM32F446RETx -DNUCLEO_F446RE -c -I../Inc -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.d" -MT"Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.o"
+../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c:33:10: fatal error: FreeRTOS.h: No such file or directory
+   33 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+../Middlewares/Third_Party/FreeRTOS/Source/croutine.c:28:10: fatal error: FreeRTOS.h: No such file or directory
+   28 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/subdir.mk:37: Middlewares/Third_Party/FreeRTOS/Source/croutine.o] Error 1
+make: *** Waiting for unfinished jobs....
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk:19: Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.o] Error 1
+../Middlewares/Third_Party/FreeRTOS/Source/list.c:30:10: fatal error: FreeRTOS.h: No such file or directory
+   30 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+../Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c:43:10: fatal error: FreeRTOS.h: No such file or directory
+   43 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+../Middlewares/Third_Party/FreeRTOS/Source/event_groups.c:37:10: fatal error: FreeRTOS.h: No such file or directory
+   37 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/subdir.mk:37: Middlewares/Third_Party/FreeRTOS/Source/list.o] Error 1
+compilation terminated.
+../Middlewares/Third_Party/FreeRTOS/Source/queue.c:36:10: fatal error: FreeRTOS.h: No such file or directory
+   36 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk:19: Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.o] Error 1
+../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c:26:10: fatal error: cmsis_compiler.h: No such file or directory
+   26 | #include "cmsis_compiler.h"             // Compiler agnostic definitions
+      |          ^~~~~~~~~~~~~~~~~~
+compilation terminated.
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/subdir.mk:37: Middlewares/Third_Party/FreeRTOS/Source/queue.o] Error 1
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/subdir.mk:37: Middlewares/Third_Party/FreeRTOS/Source/event_groups.o] Error 1
+../Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c:38:10: fatal error: FreeRTOS.h: No such file or directory
+   38 | #include "FreeRTOS.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/subdir.mk:19: Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.o] Error 1
+make: *** [Middlewares/Third_Party/FreeRTOS/Source/subdir.mk:37: Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.o] Error 1
+"make -j8 all" terminated with exit code 2. Build might be incomplete.
+
+00:21:51 Build Failed. 17 errors, 0 warnings. (took 132ms)
+

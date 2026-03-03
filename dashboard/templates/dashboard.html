@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STM32 Vehicle Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>🚗 Vehicle Dashboard</h1>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div class="dashboard-main">
+            <!-- Left Section: Speedometer -->
+            <div class="gauge-section">
+                <div class="speedometer">
+                    <canvas id="speedCanvas" width="350" height="350"></canvas>
+                    <div class="gauge-label">
+                        <div class="gauge-value" id="speedValue">0</div>
+                        <div class="gauge-unit">km/h</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Section: Indicators & Info -->
+            <div class="center-section">
+                <!-- Warning Lights -->
+                <div class="warning-lights">
+                    <div class="warning-light" id="engineWarning" title="Engine Warning">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        <span>ENGINE</span>
+                    </div>
+                    
+                    <div class="warning-light" id="tempWarning" title="High Temperature">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+                        </svg>
+                        <span>TEMP</span>
+                    </div>
+
+                    <div class="warning-light indicator-left" id="indicatorLeft" title="Left Indicator">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </div>
+
+                    <div class="warning-light indicator-right" id="indicatorRight" title="Right Indicator">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Digital Display -->
+                <div class="digital-display">
+                    <div class="display-row">
+                        <span class="display-label">GEAR</span>
+                        <span class="display-value" id="gearDisplay">D</span>
+                    </div>
+                    <div class="display-row">
+                        <span class="display-label">ODO</span>
+                        <span class="display-value" id="odoDisplay">12345</span>
+                        <span class="display-unit">km</span>
+                    </div>
+                    <div class="display-row">
+                        <span class="display-label">TRIP</span>
+                        <span class="display-value" id="tripDisplay">123.4</span>
+                        <span class="display-unit">km</span>
+                    </div>
+                </div>
+
+                <!-- Temperature Gauge -->
+                <div class="temp-gauge-container">
+                    <div class="temp-gauge">
+                        <div class="temp-label-left">C</div>
+                        <div class="temp-bar">
+                            <div class="temp-fill" id="tempFill"></div>
+                            <div class="temp-marker"></div>
+                        </div>
+                        <div class="temp-label-right">H</div>
+                    </div>
+                    <div class="temp-value">
+                        <span id="tempValue">0</span>°C
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section: Tachometer -->
+            <div class="gauge-section">
+                <div class="tachometer">
+                    <canvas id="rpmCanvas" width="350" height="350"></canvas>
+                    <div class="gauge-label">
+                        <div class="gauge-value" id="rpmValue">0</div>
+                        <div class="gauge-unit">RPM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Controls -->
+        <div class="vehicle-controls">
+            <h3>🚗 Vehicle Controls</h3>
+            
+            <div class="controls-grid">
+                <!-- Engine Start/Stop -->
+                <div class="engine-control">
+                    <div class="engine-switch" id="engineSwitch" onclick="toggleEngine()">
+                        <div class="switch-button" id="engineSwitchButton">
+                            <span id="engineSwitchText">START</span>
+                        </div>
+                    </div>
+                    <div class="engine-status" id="engineStatus">ENGINE OFF</div>
+                </div>
+
+                <!-- Pedals Section -->
+                <div class="pedals-section">
+                    <div class="pedal-container">
+                        <div class="pedal accelerator" id="acceleratorPedal" 
+                             onmousedown="pedalPressed('accelerator')" 
+                             onmouseup="pedalReleased('accelerator')"
+                             onmouseleave="pedalReleased('accelerator')"
+                             ontouchstart="pedalPressed('accelerator')"
+                             ontouchend="pedalReleased('accelerator')">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                            </svg>
+                        </div>
+                        <div class="pedal-label">GAS</div>
+                    </div>
+                    
+                    <div class="pedal-container">
+                        <div class="pedal brake" id="brakePedal"
+                             onmousedown="pedalPressed('brake')" 
+                             onmouseup="pedalReleased('brake')"
+                             onmouseleave="pedalReleased('brake')"
+                             ontouchstart="pedalPressed('brake')"
+                             ontouchend="pedalReleased('brake')">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13H5v-2h14v2z"/>
+                            </svg>
+                        </div>
+                        <div class="pedal-label">BRAKE</div>
+                    </div>
+                </div>
+
+                <!-- Indicators -->
+                <div class="indicators-section">
+                    <button class="indicator-btn left" id="leftIndicatorBtn" onclick="toggleIndicator('left')">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                        <span>LEFT</span>
+                    </button>
+                    
+                    <div class="hazard-btn" onclick="toggleHazard()">
+                        <div class="hazard-icon" id="hazardIcon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                            </svg>
+                        </div>
+                        <span>HAZARD</span>
+                    </div>
+                    
+                    <button class="indicator-btn right" id="rightIndicatorBtn" onclick="toggleIndicator('right')">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                        </svg>
+                        <span>RIGHT</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3>📊 System Commands</h3>
+            <div class="button-group">
+                <button class="control-btn" onclick="sendCommand('status')">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Get Status
+                </button>
+                <button class="control-btn" onclick="sendCommand('veh cool-hot')">
+                    🔥 Overheat Test
+                </button>
+                <button class="control-btn" onclick="sendCommand('log on')">
+                    Enable Logging
+                </button>
+                <button class="control-btn" onclick="sendCommand('log off')">
+                    Disable Logging
+                </button>
+            </div>
+            
+            <div class="custom-command">
+                <input type="text" id="customCommand" placeholder="Enter custom command..." />
+                <button class="control-btn" onclick="sendCustomCommand()">Send</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <p>STM32 Virtual Vehicle ECU Dashboard | Real-time Serial Communication @ 115200 baud</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
