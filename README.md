@@ -146,11 +146,10 @@ You can expand this ECU with:
 
 ---
 STM32 Project credits:
-## 👨‍💻 Author
-
 **Karan Gandhi**  
 Embedded Systems Engineer  
 GitHub: https://github.com/karangandhi-projects
+Stm code base available in this repo.
 
 ---
 
@@ -159,9 +158,7 @@ GitHub: https://github.com/karangandhi-projects
 See `Docs/CHANGELOG.md` for full history.
 
 Vehicle Dashboard - Quick Start Guide
-✅ Dashboard is Now Running!
-Your STM32 Vehicle Dashboard is now live and accessible at:
-
+Your STM32 Vehicle Dashboard can be accessed at:
 http://localhost:5000
 
 The browser should have opened automatically. If not, open your web browser and navigate to the URL above.
