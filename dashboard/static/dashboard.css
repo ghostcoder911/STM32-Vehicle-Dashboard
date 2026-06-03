@@ -41,6 +41,12 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status-separator {
+    color: #555;
+    margin: 0 4px;
     font-size: 1.1em;
 }
 

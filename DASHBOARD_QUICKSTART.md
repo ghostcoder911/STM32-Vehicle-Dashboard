@@ -10,6 +10,36 @@ The browser should have opened automatically. If not, open your web browser and 
 
 ---
 
+## 🎮 Logitech Racing Wheel
+
+With a **Logitech G29** connected over USB:
+
+| Input | Action |
+|-------|--------|
+| Accelerator | Increase speed (hold, like GAS) |
+| Brake | Decrease speed (hold, like BRAKE) |
+| L2 | Left indicator |
+| R2 | Right indicator |
+| R3 | Hazard lights |
+
+**Important:** Click **START** (engine on) before using the gas pedal — brake works anytime.
+
+### G29 pedals not moving speed?
+
+Your wheel must be in **PS3 mode** (not PS4) for Linux to see the pedals:
+
+1. Unplug USB  
+2. Flip the **PS3 / PS4 switch** on the wheel base to **PS3**  
+3. Plug USB back in  
+4. Check: `lsusb | grep -i logitech` → should show `046d:c24f` (not `c260`)  
+5. Restart the dashboard  
+
+Calibrate after switching: `cd dashboard && python scripts/calibrate_pedals.py`
+
+Wheel pedals (PS3 mode): **gas = axis 2**, **brake = axis 1** (server sends speed commands directly). Wheel status appears in the header.
+
+---
+
 ## 🎮 How to Use the Dashboard
 
 ### Real-Time Monitoring

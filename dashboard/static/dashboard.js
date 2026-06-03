@@ -30,25 +30,27 @@ let hazardActive = false;
 // Pedal control
 let acceleratorPressed = false;
 let brakePressed = false;
+const WHEEL_PEDAL_ON = 0.10;
+const WHEEL_PEDAL_OFF = 0.05;
 let pedalInterval = null;
 let decelerationInterval = null;
 
 // Initialize dashboard
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize WebSocket
     initWebSocket();
-    
+
     // Initialize canvases
     speedCanvas = document.getElementById('speedCanvas');
     speedCtx = speedCanvas.getContext('2d');
     rpmCanvas = document.getElementById('rpmCanvas');
     rpmCtx = rpmCanvas.getContext('2d');
-    
+
     // Start animation loop
     animate();
-    
+
     // Add Enter key handler for custom command
-    document.getElementById('customCommand').addEventListener('keypress', function(e) {
+    document.getElementById('customCommand').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             sendCustomCommand();
         }
@@ -58,28 +60,94 @@ document.addEventListener('DOMContentLoaded', function() {
 // WebSocket initialization
 function initWebSocket() {
     socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-    
-    socket.on('connect', function() {
+
+    socket.on('connect', function () {
         console.log('Connected to server');
         updateConnectionStatus(true);
     });
-    
-    socket.on('disconnect', function() {
+
+    socket.on('disconnect', function () {
         console.log('Disconnected from server');
         updateConnectionStatus(false);
     });
-    
-    socket.on('vehicle_update', function(data) {
+
+    socket.on('vehicle_update', function (data) {
         console.log('Received data:', data);
         updateDashboard(data);
     });
+
+    socket.on('wheel_status', function (data) {
+        updateWheelStatus(data);
+    });
+
+    socket.on('wheel_pedals', function (data) {
+        applyWheelPedals(data.accelerator || 0, data.brake || 0);
+    });
+
+    // Legacy single-pedal events (older server builds)
+    socket.on('wheel_pedal', function (data) {
+        const value = data.value || 0;
+        if (data.pedal === 'accelerator') {
+            applyWheelPedals(value, brakePressed ? 1 : 0);
+        } else if (data.pedal === 'brake') {
+            applyWheelPedals(acceleratorPressed ? 1 : 0, value);
+        }
+    });
+
+    socket.on('wheel_button', function (data) {
+        if (!data.pressed) {
+            return;
+        }
+        if (!engineRunning) {
+            return;
+        }
+        if (data.button === 'l2') {
+            toggleIndicator('left');
+        } else if (data.button === 'r2') {
+            toggleIndicator('right');
+        } else if (data.button === 'r3') {
+            toggleHazard();
+        }
+    });
+}
+
+function applyWheelPedals(accelValue, brakeValue) {
+    const wantAccel = accelValue > WHEEL_PEDAL_ON;
+    const wantBrake = brakeValue > WHEEL_PEDAL_ON;
+
+    // Visual feedback only — speed commands are sent server-side from wheel_drive
+    const accelPedal = document.getElementById('acceleratorPedal');
+    const brakePedal = document.getElementById('brakePedal');
+    if (accelPedal) {
+        accelPedal.classList.toggle('pressed', wantAccel);
+    }
+    if (brakePedal) {
+        brakePedal.classList.toggle('pressed', wantBrake);
+    }
+}
+
+function updateWheelStatus(data) {
+    const indicator = document.getElementById('wheelStatusIndicator');
+    const text = document.getElementById('wheelStatusText');
+    if (!indicator || !text) {
+        return;
+    }
+    if (data.connected) {
+        indicator.classList.add('connected');
+        indicator.classList.remove('disconnected');
+        text.textContent = data.device ? 'Wheel: ' + data.device : 'Wheel connected';
+    } else {
+        indicator.classList.add('disconnected');
+        indicator.classList.remove('connected');
+        text.textContent = 'Wheel not connected';
+    }
 }
 
 // Update connection status indicator
 function updateConnectionStatus(connected) {
     const indicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('statusText');
-    
+
     if (connected) {
         indicator.classList.add('connected');
         indicator.classList.remove('disconnected');
@@ -94,20 +162,20 @@ function updateConnectionStatus(connected) {
 // Update dashboard with new data
 function updateDashboard(data) {
     currentData = data;
-    
+
     // Update target values for smooth animation
     targetSpeed = data.speed || 0;
     targetRpm = data.rpm || 0;
-    
+
     // Update temperature
     updateTemperature(data.coolant || 0);
-    
+
     // Update warning lights
     updateWarningLights(data);
-    
+
     // Update gear display
     updateGearDisplay(data.speed || 0);
-    
+
     // Update connection status
     updateConnectionStatus(data.connected !== false);
 }
@@ -117,26 +185,26 @@ function drawSpeedometer(speed) {
     const centerX = speedCanvas.width / 2;
     const centerY = speedCanvas.height / 2;
     const radius = 140;
-    
+
     // Clear canvas
     speedCtx.clearRect(0, 0, speedCanvas.width, speedCanvas.height);
-    
+
     // Draw outer circle
     speedCtx.beginPath();
     speedCtx.arc(centerX, centerY, radius + 10, 0, 2 * Math.PI);
     speedCtx.strokeStyle = '#333';
     speedCtx.lineWidth = 20;
     speedCtx.stroke();
-    
+
     // Draw colored arc (active portion)
     const maxSpeed = 200;
     const startAngle = 0.75 * Math.PI;
     const endAngle = 2.25 * Math.PI;
     const speedAngle = startAngle + (speed / maxSpeed) * (endAngle - startAngle);
-    
+
     speedCtx.beginPath();
     speedCtx.arc(centerX, centerY, radius + 10, startAngle, speedAngle);
-    
+
     // Color gradient based on speed
     let color;
     if (speed < 60) {
@@ -146,37 +214,37 @@ function drawSpeedometer(speed) {
     } else {
         color = '#ff0000';
     }
-    
+
     speedCtx.strokeStyle = color;
     speedCtx.lineWidth = 20;
     speedCtx.stroke();
-    
+
     // Draw tick marks
     for (let i = 0; i <= maxSpeed; i += 20) {
         const angle = startAngle + (i / maxSpeed) * (endAngle - startAngle);
         const isMajor = i % 40 === 0;
-        
+
         const innerRadius = radius - (isMajor ? 25 : 15);
         const outerRadius = radius;
-        
+
         const x1 = centerX + innerRadius * Math.cos(angle);
         const y1 = centerY + innerRadius * Math.sin(angle);
         const x2 = centerX + outerRadius * Math.cos(angle);
         const y2 = centerY + outerRadius * Math.sin(angle);
-        
+
         speedCtx.beginPath();
         speedCtx.moveTo(x1, y1);
         speedCtx.lineTo(x2, y2);
         speedCtx.strokeStyle = '#888';
         speedCtx.lineWidth = isMajor ? 3 : 1;
         speedCtx.stroke();
-        
+
         // Draw numbers for major ticks
         if (isMajor) {
             const textRadius = radius - 45;
             const textX = centerX + textRadius * Math.cos(angle);
             const textY = centerY + textRadius * Math.sin(angle);
-            
+
             speedCtx.fillStyle = '#aaa';
             speedCtx.font = '14px Arial';
             speedCtx.textAlign = 'center';
@@ -184,11 +252,11 @@ function drawSpeedometer(speed) {
             speedCtx.fillText(i.toString(), textX, textY);
         }
     }
-    
+
     // Draw needle
     const needleAngle = startAngle + (speed / maxSpeed) * (endAngle - startAngle);
     const needleLength = radius - 20;
-    
+
     speedCtx.beginPath();
     speedCtx.moveTo(centerX, centerY);
     speedCtx.lineTo(
@@ -198,13 +266,13 @@ function drawSpeedometer(speed) {
     speedCtx.strokeStyle = '#ff0000';
     speedCtx.lineWidth = 3;
     speedCtx.stroke();
-    
+
     // Draw center circle
     speedCtx.beginPath();
     speedCtx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
     speedCtx.fillStyle = '#ff0000';
     speedCtx.fill();
-    
+
     // Update digital display
     document.getElementById('speedValue').textContent = Math.round(speed);
 }
@@ -214,26 +282,26 @@ function drawTachometer(rpm) {
     const centerX = rpmCanvas.width / 2;
     const centerY = rpmCanvas.height / 2;
     const radius = 140;
-    
+
     // Clear canvas
     rpmCtx.clearRect(0, 0, rpmCanvas.width, rpmCanvas.height);
-    
+
     // Draw outer circle
     rpmCtx.beginPath();
     rpmCtx.arc(centerX, centerY, radius + 10, 0, 2 * Math.PI);
     rpmCtx.strokeStyle = '#333';
     rpmCtx.lineWidth = 20;
     rpmCtx.stroke();
-    
+
     // Draw colored arc (active portion)
     const maxRpm = 8000;
     const startAngle = 0.75 * Math.PI;
     const endAngle = 2.25 * Math.PI;
     const rpmAngle = startAngle + (rpm / maxRpm) * (endAngle - startAngle);
-    
+
     rpmCtx.beginPath();
     rpmCtx.arc(centerX, centerY, radius + 10, startAngle, rpmAngle);
-    
+
     // Color gradient based on RPM
     let color;
     if (rpm < 3000) {
@@ -243,37 +311,37 @@ function drawTachometer(rpm) {
     } else {
         color = '#ff0000';
     }
-    
+
     rpmCtx.strokeStyle = color;
     rpmCtx.lineWidth = 20;
     rpmCtx.stroke();
-    
+
     // Draw tick marks
     for (let i = 0; i <= maxRpm; i += 1000) {
         const angle = startAngle + (i / maxRpm) * (endAngle - startAngle);
         const isMajor = i % 1000 === 0;
-        
+
         const innerRadius = radius - (isMajor ? 25 : 15);
         const outerRadius = radius;
-        
+
         const x1 = centerX + innerRadius * Math.cos(angle);
         const y1 = centerY + innerRadius * Math.sin(angle);
         const x2 = centerX + outerRadius * Math.cos(angle);
         const y2 = centerY + outerRadius * Math.sin(angle);
-        
+
         rpmCtx.beginPath();
         rpmCtx.moveTo(x1, y1);
         rpmCtx.lineTo(x2, y2);
         rpmCtx.strokeStyle = '#888';
         rpmCtx.lineWidth = isMajor ? 3 : 1;
         rpmCtx.stroke();
-        
+
         // Draw numbers for major ticks
         if (isMajor) {
             const textRadius = radius - 45;
             const textX = centerX + textRadius * Math.cos(angle);
             const textY = centerY + textRadius * Math.sin(angle);
-            
+
             rpmCtx.fillStyle = '#aaa';
             rpmCtx.font = '14px Arial';
             rpmCtx.textAlign = 'center';
@@ -281,7 +349,7 @@ function drawTachometer(rpm) {
             rpmCtx.fillText((i / 1000).toString(), textX, textY);
         }
     }
-    
+
     // Draw red zone (6000-8000 RPM)
     const redZoneStart = startAngle + (6000 / maxRpm) * (endAngle - startAngle);
     rpmCtx.beginPath();
@@ -289,11 +357,11 @@ function drawTachometer(rpm) {
     rpmCtx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
     rpmCtx.lineWidth = 20;
     rpmCtx.stroke();
-    
+
     // Draw needle
     const needleAngle = startAngle + (rpm / maxRpm) * (endAngle - startAngle);
     const needleLength = radius - 20;
-    
+
     rpmCtx.beginPath();
     rpmCtx.moveTo(centerX, centerY);
     rpmCtx.lineTo(
@@ -303,13 +371,13 @@ function drawTachometer(rpm) {
     rpmCtx.strokeStyle = '#ff0000';
     rpmCtx.lineWidth = 3;
     rpmCtx.stroke();
-    
+
     // Draw center circle
     rpmCtx.beginPath();
     rpmCtx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
     rpmCtx.fillStyle = '#ff0000';
     rpmCtx.fill();
-    
+
     // Update digital display
     document.getElementById('rpmValue').textContent = Math.round(rpm);
 }
@@ -318,13 +386,13 @@ function drawTachometer(rpm) {
 function updateTemperature(temp) {
     const tempValue = document.getElementById('tempValue');
     const tempFill = document.getElementById('tempFill');
-    
+
     tempValue.textContent = temp.toFixed(1);
-    
+
     // Calculate fill percentage (assuming normal range 0-150°C)
     const fillPercent = Math.min((temp / 150) * 100, 100);
     tempFill.style.width = fillPercent + '%';
-    
+
     // Change color based on temperature
     if (temp > 100) {
         tempValue.style.color = '#ff0000';
@@ -342,14 +410,14 @@ function updateTemperature(temp) {
 function updateWarningLights(data) {
     const engineWarning = document.getElementById('engineWarning');
     const tempWarning = document.getElementById('tempWarning');
-    
+
     // Engine warning (activate if RPM > 6000)
     if (data.rpm > 6000) {
         engineWarning.classList.add('active');
     } else {
         engineWarning.classList.remove('active');
     }
-    
+
     // Temperature warning (activate if coolant > 100)
     if (data.coolant > 100) {
         tempWarning.classList.add('active');
@@ -363,15 +431,15 @@ function animate() {
     // Smooth interpolation for speed
     const speedDiff = targetSpeed - currentSpeed;
     currentSpeed += speedDiff * 0.1;
-    
+
     // Smooth interpolation for RPM
     const rpmDiff = targetRpm - currentRpm;
     currentRpm += rpmDiff * 0.1;
-    
+
     // Draw gauges
     drawSpeedometer(currentSpeed);
     drawTachometer(currentRpm);
-    
+
     // Continue animation
     requestAnimationFrame(animate);
 }
@@ -386,7 +454,7 @@ function sendCommand(command) {
 function sendCustomCommand() {
     const input = document.getElementById('customCommand');
     const command = input.value.trim();
-    
+
     if (command) {
         sendCommand(command);
         input.value = '';
@@ -400,27 +468,28 @@ function sendCustomCommand() {
 // Engine Start/Stop
 function toggleEngine() {
     engineRunning = !engineRunning;
-    
+
     const engineSwitch = document.getElementById('engineSwitch');
     const engineSwitchButton = document.getElementById('engineSwitchButton');
     const engineSwitchText = document.getElementById('engineSwitchText');
     const engineStatus = document.getElementById('engineStatus');
-    
+
     if (engineRunning) {
         engineSwitch.classList.add('on');
         engineStatus.classList.add('on');
         engineSwitchText.textContent = 'STOP';
         engineStatus.textContent = 'ENGINE ON';
-        
+
         // Set initial idle speed when engine starts
         currentTargetSpeed = 0;
         sendCommand('veh speed 0');
+        socket.emit('engine_state', { running: true });
     } else {
         engineSwitch.classList.remove('on');
         engineStatus.classList.remove('on');
         engineSwitchText.textContent = 'START';
         engineStatus.textContent = 'ENGINE OFF';
-        
+
         // Stop the vehicle when engine is off
         currentTargetSpeed = 0;
         targetSpeed = 0;
@@ -428,13 +497,14 @@ function toggleEngine() {
         targetRpm = 0;
         currentRpm = 0;
         sendCommand('veh speed 0');
-        
+        socket.emit('engine_state', { running: false });
+
         // Stop any deceleration intervals
         if (decelerationInterval) {
             clearInterval(decelerationInterval);
             decelerationInterval = null;
         }
-        
+
         // Turn off all indicators
         if (leftIndicatorActive || rightIndicatorActive || hazardActive) {
             toggleIndicator('off');
@@ -448,10 +518,10 @@ function pedalPressed(pedalType) {
     if (!engineRunning && pedalType === 'accelerator') {
         return; // Can't accelerate if engine is off
     }
-    
+
     const pedal = document.getElementById(pedalType + 'Pedal');
     pedal.classList.add('pressed');
-    
+
     if (pedalType === 'accelerator') {
         acceleratorPressed = true;
         // Stop natural deceleration if it's running
@@ -474,7 +544,7 @@ function pedalPressed(pedalType) {
 function pedalReleased(pedalType) {
     const pedal = document.getElementById(pedalType + 'Pedal');
     pedal.classList.remove('pressed');
-    
+
     if (pedalType === 'accelerator') {
         acceleratorPressed = false;
         // Start natural deceleration when gas is released
@@ -484,7 +554,7 @@ function pedalReleased(pedalType) {
     } else if (pedalType === 'brake') {
         brakePressed = false;
     }
-    
+
     if (!acceleratorPressed && !brakePressed) {
         stopPedalControl();
     }
@@ -492,14 +562,14 @@ function pedalReleased(pedalType) {
 
 function startPedalControl() {
     if (pedalInterval) return; // Already running
-    
+
     pedalInterval = setInterval(() => {
         if (acceleratorPressed && engineRunning) {
             // Increase speed (max 180 km/h)
             currentTargetSpeed = Math.min(currentTargetSpeed + 5, 180);
             sendCommand('veh speed ' + Math.round(currentTargetSpeed));
         }
-        
+
         if (brakePressed) {
             // Decrease speed (min 0 km/h)
             currentTargetSpeed = Math.max(currentTargetSpeed - 8, 0);
@@ -521,7 +591,7 @@ function startNaturalDeceleration() {
     if (decelerationInterval) {
         clearInterval(decelerationInterval);
     }
-    
+
     decelerationInterval = setInterval(() => {
         // Stop if brake is pressed or gas is pressed again
         if (brakePressed || acceleratorPressed) {
@@ -529,7 +599,7 @@ function startNaturalDeceleration() {
             decelerationInterval = null;
             return;
         }
-        
+
         // Gradually decrease speed (slower than braking)
         if (currentTargetSpeed > 0) {
             currentTargetSpeed = Math.max(currentTargetSpeed - 2, 0);
@@ -545,20 +615,20 @@ function startNaturalDeceleration() {
 // Indicator Controls
 function toggleIndicator(direction) {
     if (!engineRunning) return; // Can't use indicators if engine is off
-    
+
     const leftBtn = document.getElementById('leftIndicatorBtn');
     const rightBtn = document.getElementById('rightIndicatorBtn');
     const leftLight = document.getElementById('indicatorLeft');
     const rightLight = document.getElementById('indicatorRight');
-    
+
     // Turn off hazards if they're on
     if (hazardActive) {
         toggleHazard();
     }
-    
+
     if (direction === 'left') {
         leftIndicatorActive = !leftIndicatorActive;
-        
+
         if (leftIndicatorActive) {
             leftBtn.classList.add('active');
             leftLight.classList.add('active');
@@ -572,7 +642,7 @@ function toggleIndicator(direction) {
         }
     } else if (direction === 'right') {
         rightIndicatorActive = !rightIndicatorActive;
-        
+
         if (rightIndicatorActive) {
             rightBtn.classList.add('active');
             rightLight.classList.add('active');
@@ -598,35 +668,35 @@ function toggleIndicator(direction) {
 // Hazard Lights
 function toggleHazard() {
     if (!engineRunning) return; // Can't use hazards if engine is off
-    
+
     hazardActive = !hazardActive;
-    
+
     const hazardBtn = document.querySelector('.hazard-btn');
     const leftBtn = document.getElementById('leftIndicatorBtn');
     const rightBtn = document.getElementById('rightIndicatorBtn');
     const leftLight = document.getElementById('indicatorLeft');
     const rightLight = document.getElementById('indicatorRight');
-    
+
     if (hazardActive) {
         hazardBtn.classList.add('active');
-        
+
         // Activate both indicators
         leftBtn.classList.add('active');
         rightBtn.classList.add('active');
         leftLight.classList.add('active');
         rightLight.classList.add('active');
-        
+
         leftIndicatorActive = true;
         rightIndicatorActive = true;
     } else {
         hazardBtn.classList.remove('active');
-        
+
         // Deactivate both indicators
         leftBtn.classList.remove('active');
         rightBtn.classList.remove('active');
         leftLight.classList.remove('active');
         rightLight.classList.remove('active');
-        
+
         leftIndicatorActive = false;
         rightIndicatorActive = false;
     }
@@ -635,12 +705,12 @@ function toggleHazard() {
 // Update gear display based on speed
 function updateGearDisplay(speed) {
     const gearDisplay = document.getElementById('gearDisplay');
-    
+
     if (!engineRunning) {
         gearDisplay.textContent = 'P';
         return;
     }
-    
+
     if (speed === 0) {
         gearDisplay.textContent = 'N';
     } else if (speed < 20) {

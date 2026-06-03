@@ -275,4 +275,4 @@ Custom commands: Experiment with the CLI commands
 Check dashboard/README.md for detailed documentation
 Review STM32 CLI commands in vehicle_ecu_docs/CLI_COMMANDS.md
 Check serial communication in vehicle_ecu_docs/ARCHITECTURE.md
-Enjoy your Vehicle Dashboard! 🚗💨
+

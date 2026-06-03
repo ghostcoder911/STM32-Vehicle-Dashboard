@@ -17,6 +17,7 @@ A beautiful, real-time web-based dashboard for visualizing data from the STM32 V
 - Python 3.7+
 - STM32 board connected via USB (typically `/dev/ttyACM0`)
 - Serial communication at 115200 baud
+- *(Optional)* Logitech G29 racing wheel for pedal/indicator control
 
 ## Installation
 
@@ -43,6 +44,18 @@ python app.py
 ```
 http://localhost:5000
 ```
+
+### Logitech G29 Racing Wheel
+
+| Input | Action |
+|-------|--------|
+| Accelerator pedal | Increase speed (hold) |
+| Brake pedal | Decrease speed (hold) |
+| L2 | Left turn indicator |
+| R2 | Right turn indicator |
+| R3 | Hazard lights |
+
+Start the engine on the dashboard before driving. See `VEHICLE_CONTROLS_GUIDE.md` for details.
 
 ### Using the Dashboard
 
@@ -99,6 +112,8 @@ You can also send custom commands using the input field at the bottom.
 ## Files
 
 - `app.py` - Flask server with WebSocket support
+- `gamepad_reader.py` - Logitech wheel input (pygame)
+- `gamepad_config.py` - Wheel axis/button mapping
 - `serial_reader.py` - Serial communication handler
 - `templates/dashboard.html` - Dashboard HTML structure
 - `static/dashboard.css` - Dashboard styling

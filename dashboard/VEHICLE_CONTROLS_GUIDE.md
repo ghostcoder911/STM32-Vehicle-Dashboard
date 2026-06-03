@@ -1,5 +1,31 @@
 # Vehicle Controls Guide
 
+## 🎮 Logitech Racing Wheel (G29)
+
+Connect your **Logitech G29** (or similar) via USB before starting the dashboard.
+
+| Wheel input | Dashboard action |
+|-------------|------------------|
+| **Accelerator pedal** | Hold to increase speed (same as GAS button) |
+| **Brake pedal** | Hold to decrease speed (same as BRAKE button) |
+| **L2** | Toggle left turn indicator |
+| **R2** | Toggle right turn indicator |
+| **R3** | Toggle hazard lights |
+
+**Notes:**
+- Start the **engine** on the dashboard before accelerating or using indicators.
+- Releasing the accelerator triggers natural slowdown (same as the on-screen gas pedal).
+- The header shows wheel connection status next to the STM32 status.
+
+**Linux note:** G29 pedals use pygame axes **3** (gas) and **4** (brake); L2/R2 are buttons **6** and **7**.
+
+**Remapping** (other wheels): edit `dashboard/gamepad_config.py`, then run:
+```bash
+cd dashboard && python scripts/list_gamepad.py
+```
+
+---
+
 ## 🚗 Interactive Vehicle Controls
 
 Your dashboard now includes realistic vehicle controls that simulate driving a real car!
